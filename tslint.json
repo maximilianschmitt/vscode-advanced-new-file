@@ -3,7 +3,7 @@
     "adjacent-overload-signatures": true,
     "member-access": true,
     "member-ordering": [false],
-    "no-any": false,
+    "no-any": true,
     "no-empty-interface": false,
     "no-inferrable-types": [true],
     "no-internal-module": true,

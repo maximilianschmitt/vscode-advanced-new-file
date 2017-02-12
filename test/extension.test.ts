@@ -264,7 +264,8 @@ describe('Advanced New File', () => {
 
     it('creates and opens a file at given path', () => {
       let command;
-      const registerCommand = (name, commandFn) => command = commandFn;
+      const registerCommand =
+        (name: string, commandFn: Function) => command = commandFn;
 
       const textDocument = 'mock document';
       const openTextDocument = chai.spy(() => Promise.resolve(textDocument));
@@ -293,7 +294,7 @@ describe('Advanced New File', () => {
         }
       });
 
-      const context = { subscriptions: [] };
+      const context = { subscriptions: [] as vscode.Disposable[] };
 
       advancedNewFile.activate(context);
 
@@ -315,7 +316,8 @@ describe('Advanced New File', () => {
     context('no project opened in workspace', () => {
       it('shows an error message', () => {
         let command;
-        const registerCommand = (name, commandFn) => command = commandFn;
+        const registerCommand =
+          (name: string, commandFn: Function) => command = commandFn;
         const showErrorMessage = chai.spy();
 
         const advancedNewFile = proxyquire('../src/extension', {
@@ -326,7 +328,7 @@ describe('Advanced New File', () => {
           }
         });
 
-        const context = { subscriptions: [] };
+        const context = { subscriptions: [] as vscode.Disposable[] };
 
         advancedNewFile.activate(context);
         command();

@@ -10,11 +10,11 @@ import { sync as globSync } from 'glob';
 const systemRoot =
   (platform() === 'win32') ? `${process.cwd().split(path.sep)[0]}\\` : '/';
 
-function invertGlob(pattern) {
+function invertGlob(pattern: string) {
   return pattern.replace(/^!/, '');
 }
 
-function walkupGitignores(dir, found = []) {
+function walkupGitignores(dir: string, found: string[] = []): string[] {
   const gitignore = path.join(dir, '.gitignore');
   if (fs.existsSync(gitignore)) found.push(gitignore);
 
@@ -25,8 +25,25 @@ function walkupGitignores(dir, found = []) {
   }
 }
 
-function flatten(memo, item) {
+function flatten(memo: string[], item: string[]): string[] {
   return memo.concat(item);
+}
+
+function gitignoredGlobs(root: string): string[] {
+  const ignores = walkupGitignores(root).map(gitignoreToGlob);
+  return ignores.reduce(flatten, []);
+}
+
+function workspaceIgnoredGlobs(): string[] {
+  const configFilesExclude = vscode.workspace.getConfiguration('files.exclude');
+  const workspaceIgnored = Object.keys(configFilesExclude)
+    .filter(key => configFilesExclude[key] === true);
+
+  return gitignoreToGlob(workspaceIgnored.join('\n'), { string: true });
+}
+
+function ignoreGlobs(root: string): string[] {
+  return gitignoredGlobs(root).concat(workspaceIgnoredGlobs()).map(invertGlob);
 }
 
 export function showQuickPick(choices: string[]) {
@@ -47,19 +64,7 @@ export function showInputBox(baseDirectory: string) {
 }
 
 export function directories(root: string): string[] {
-  const gitignoreFiles = walkupGitignores(root);
-  const gitignoreGlobs =
-    gitignoreFiles.map(gitignoreToGlob).reduce(flatten, []);
-
-  const configFilesExclude = vscode.workspace.getConfiguration('files.exclude');
-  const workspaceIgnored = Object.keys(configFilesExclude)
-    .filter(key => configFilesExclude[key] === true);
-  const workspaceIgnoredGlobs =
-    gitignoreToGlob(workspaceIgnored.join('\n'), { string: true });
-
-  const ignore = gitignoreGlobs.concat(workspaceIgnoredGlobs).map(invertGlob);
-
-  const results = globSync('**', { cwd: root, ignore })
+  const results = globSync('**', { cwd: root, ignore: ignoreGlobs(root) })
     .filter(f => fs.statSync(path.join(root, f)).isDirectory())
     .map(f => '/' + f);
 
